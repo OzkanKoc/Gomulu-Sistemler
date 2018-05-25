@@ -1,0 +1,118 @@
+DEFINE LOADER_USED 1
+
+define LCD_DREG PORTD
+define LCD_DBIT 4
+define LCD_RSREG PORTE
+define LCD_RSBIT 2
+define LCD_EREG PORTE
+define LCD_EBIT 1
+define LCD_BITS 4
+
+TRISA=%000111:TRISB=0:TRISC=%10000000:TRISD=0:TRISE=0:ADCON1=7
+pause 100
+
+symbol sag_e=portc.1:symbol sag_i=portd.0:symbol sag_g=portd.1
+symbol sol_e=portc.2:symbol sol_i=portd.2:symbol sol_g=portd.3
+
+symbol sag_cizgi=porta.0:symbol sol_cizgi=porta.2:symbol orta_cizgi=porta.1
+
+symbol gonderon=portb.1:gonderon=0    
+symbol gondersag=portb.2:gondersag=0
+symbol gondersol=portb.0:gondersol=0
+
+symbol alon=portc.0:symbol alsag=portc.5:symbol alsol=portc.4
+
+algila_on var word:algila_sag var word:algila_sol var word
+mesafe_on var word:mesafe_sag var word:mesafe_sol var word
+
+algilaon VAR word
+mesafeon VAR word
+gonderon=0
+
+cevir_cm var byte      
+cevir_cm=6
+
+algilasag VAR word
+mesafesag VAR word
+gondersag=0
+
+algilasol VAR word
+mesafesol VAR word
+gondersol=0
+
+                                                    
+main:
+    gosub sensor_olc
+    lcdout $fe,1,"on:" , #mesafeon
+    lcdout $fe,$c0,"sol:" , #mesafesol,"sag:" , #mesafesag
+    pause 100 
+
+    
+    while mesafeon>15:
+        gosub ileri
+        gosub sensor_olc
+        lcdout $fe,1,"on:" , #mesafeon
+        lcdout $fe,$c0,"sol:" , #mesafesol,"sag:" , #mesafesag
+    wend
+    
+    if mesafesag>mesafesol then
+        gosub sag
+    else
+        gosub sol
+   endif
+   pause 3000
+   
+    sag_i=0:sag_g=0:sol_i=0:sol_g=0
+    
+    pause 1000
+    
+goto main
+
+'-------------------GOSUB---------------------'
+
+ileri:
+    sag_e=1: sol_e=1
+    sag_i=1:sol_i=1 :sag_g=0: sol_g=0
+    return
+
+arka: 
+    sag_e=1: sol_e=1
+    sag_i=0:sol_i=0 :sag_g=1: sol_g=1
+    return
+sol:
+    sag_e=1: sol_e=1
+    sag_i=1:sol_i=0 :sag_g=0: sol_g=1
+    return
+sag:
+    sag_e=1: sol_e=1
+    sag_i=0:sol_i=1 :sag_g=1: sol_g=0
+return
+
+
+deneme_ultrasonic:
+
+gosub sensor_olc
+
+lcdout $fe,1,"on:" , #mesafeon
+lcdout $fe,$c0,"sol:" , #mesafesol,"sag:" , #mesafesag
+pause 100
+return
+
+
+sensor_olc:
+
+pulsout gonderon, 1
+pulsin alon,1,algilaon
+
+pulsout gondersag,1
+pulsin alsag,1,algilasag
+
+pulsout gondersol, 1
+pulsin alsol,1,algilasol
+
+mesafeon = algilaon/cevir_cm
+mesafesag = algilasag/cevir_cm
+mesafesol = algilasol/cevir_cm
+pause 1
+return 
+
